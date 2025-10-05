@@ -1,0 +1,39 @@
+# Requirements for all components
+
+# Core Data Processing
+pandas
+numpy
+requests
+
+# Apache Spark and PySpark
+pyspark
+py4j
+
+# Database Connectivity
+psycopg2-binary # PostgreSQL adapter
+SQLAlchemy     # ORM (Object-Relational Mapping) and database toolkit
+
+# Apache Airflow
+apache-airflow
+apache-airflow-providers-postgres
+
+# Web Framework & Visualization
+Flask
+plotly
+Jinja2
+
+# Environment & Configuration
+python-dotenv
+
+# Data Validation & Quality
+great-expectations
+
+# Development & Testing
+pytest
+black
+flake8
+
+# Optional: For enhanced data processing
+openpyxl   # Excel file support
+matplotlib # Additional plotting
+seaborn   # Statistical visualization
