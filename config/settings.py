@@ -45,7 +45,7 @@ class APIConfig:
     but the structure allows for easy extension to other providers like Yahoo Finance, 
     IEX Cloud, etc.
     """
-    ALPHA_VANTAGE_API_KEY:  str = os.getenv('ALPHA_VANTAGE_API_KEY', 'FT9DV93ELSDEH3FS') #'demo'
+    ALPHA_VANTAGE_API_KEY:  str = os.getenv('ALPHA_VANTAGE_API_KEY', 'demo') 
     ALPHA_VANTAGE_BASE_URL: str = 'https://www.alphavantage.co/query'
 
     # API rate limiting settings
