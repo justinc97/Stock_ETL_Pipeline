@@ -747,7 +747,7 @@ def create_sample_data():
         print("3. Calculate sample indicators")
         print("✅ Sample data creation completed!")
     except Exception as e:
-        print(f"❌ Sample data creation failed: {str(e)}")
+        print(f"Sample data creation failed: {str(e)}")
 
 def main():
     """
