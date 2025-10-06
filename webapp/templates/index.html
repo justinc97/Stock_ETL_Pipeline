@@ -235,9 +235,10 @@
          </nav>
 
          <!-- Main Content -->
-          <div class="container-fluid mt-4">
+        <div class="container-fluid mt-4">
             <!-- Portfolio Summary Row -->
-             <div class="row mb-4">
+            <div class="row mb-4">
+
                 <div class="col-md-4">
                     <div class="card portfolio-summary">
                         <div class="card-body">
@@ -273,23 +274,24 @@
                 <div class="col-md-4">
                     <div class="card top-performers">
                         <div class="card-body">
-                            <g5 class="card-title">
+                            <h5 class="card-title">
                                 <i class="fas fa-trophy me-2"></i>
                                 Top Weekly Performers
-                            </g5>
+                            </h5>
                             <div id="topPerformers">
                                 {% for stock in portfolio_summary.top_performers[:3] %}
                                 <div class="stock-item">
-                                    <div class="stock-symbol">{{ stock.symbol }}</div>
-                                    <small>{{ stock.company_name[:20] }}...</small>
+                                    <div>
+                                        <div class="stock-symbol">{{ stock.symbol }}</div>
+                                        <small>{{ stock.company_name[:20] }}...</small>
+                                    </div>
+                                    <div class="stock-change">{{ "+%.2f"|format(stock.weekly_return) }}%</div>
                                 </div>
-                                <div class="stock-change">{{ "+%.2f"|format(stock.weekly_return) }}%</div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
                     </div>
                 </div>
-             
 
                 <div class="col-md-4">
                     <div class="card recent-activity">
@@ -301,12 +303,14 @@
                             <div id="recentActivity">
                                 {% for stock in portfolio_summary.recent_activity[:3] %}
                                 <div class="stock-item">
-                                    <div class="stock-symbol">{{ stock.symbol }}</div>
-                                    <small>${{ "{:,}".format(stock.volume) }}</small>
+                                    <div>
+                                        <div class="stock-symbol">{{ stock.symbol }}</div>
+                                        <small>${{ "{:,}".format(stock.volume) }}</small>
+                                    </div>
+                                    <div>{{ "{:,}".format(stock.volume) }}</div>
                                 </div>
-                                <div>{{ "{:,}".format(stock.volume) }}</div>
+                                {% endfor %}
                             </div>
-                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -315,7 +319,7 @@
             <!-- Charts Row -->
              <div class="row">
                 <!-- Stock Price Chart -->
-                 <div class="col-md-8">
+                <div class="col-md-8">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
@@ -341,10 +345,10 @@
                             </div>
                         </div>
                     </div>
-                 </div>
+                </div>
 
-                 <!-- Technical Indicators -->
-                  <div class="col-md-4">
+                <!-- Technical Indicators -->
+                <div class="col-md-4">
                     <div class="card">
                         <div class="card-header">
                             <h5 class="mb-0">
@@ -353,7 +357,7 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            <div id="technicalInidicators">
+                            <div id="technicalIndicators">
                                 <div class="text-center text-muted">
                                     <i class="fas fa-info-circle me-2"></i>
                                     Select a stock to view indicators
@@ -378,15 +382,15 @@
                                         <div class="metric-label">Selected Symbol</div>
                                     </div>
                                     <div class="col-6">
-                                        <div class="metric-value text-muted" id="currentPrice">$--</div>
+                                        <div class="metric-value text-muted" id="currentPrice">$-</div>
                                         <div class="metric-label">Current Price</div>
                                     </div>
                                     <div class="col-6">
-                                        <div class="metric-value text-muted" id="dailyChange">--%</div>
+                                        <div class="metric-value text-muted" id="dailyChange">-%</div>
                                         <div class="metric-label">Daily Change</div>
                                     </div>
                                     <div class="col-6 mt-3">
-                                        <div class="metric-value text-muted" id="volatility">--%</div>
+                                        <div class="metric-value text-muted" id="volatility">-%</div>
                                         <div class="metric-label">30 Day Volatility</div>
                                     </div>
                                     <div class="col-6 mt-3">
@@ -401,7 +405,7 @@
              </div>
 
              <!-- Moving Averages Chart -->
-              <div class="row mt-4">
+            <div class="row mt-4">
                 <div class="col-12">
                     <div class="card">
                         <div class="card-header d-flex justify-content-between align-items-center">
@@ -426,17 +430,17 @@
                         </div>
                     </div>
                 </div>
-              </div>
+            </div>
         </div>
 
         <!-- Refresh Button -->
-         <button class="btn btn-primary refresh-btn" id="refreshBtn" title="Refresh Data">
+        <button class="btn btn-primary refresh-btn" id="refreshBtn" title="Refresh Data">
             <i class="fas fa-sync-alt"></i>
             Refresh Data
-         </button>
+        </button>
 
         <!-- Toast Container for Notifications -->
-         <div class="toast-container" id="toastContainer"></div>
+        <div class="toast-container" id="toastContainer"></div>
 
         <!-- JavaScript Dependencies -->
          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -542,7 +546,8 @@
                                     }
                                 }
                             },
-                            interaction: {intersect: false,
+                            interaction: {
+                                intersect: false,
                                 mode: 'index'
                             }
                         }
@@ -738,7 +743,7 @@
 
                     // Update volatility and trend in metrics
                     if (latest.volatility) {
-                        document.getElementById('volatility').textContent = `$(latest.volatility * 100).toFixed(2)}%`;
+                        document.getElementById('volatility').textContent = `${(latest.volatility * 100).toFixed(2)}%`;
                     }
 
                     if (latest.trend) {
@@ -756,7 +761,19 @@
                             <div class = "d-flex justify-content-between align-items-center mb-2">
                                 <span>20-Day SMA</span>
                                 <span class="${above20 ? 'positive' : 'negative'}">
-                                    ${latest.sma_20.toFixed(2)} ${above20 ? '↗' : '↘'}
+                                    ${latest.sma_20.toFixed(2)} ${above20 ? 'Up' : 'Down'}
+                                </span>
+                            </div>
+                        `;
+                    }
+
+                    if (latest.sma_50) { 
+                        const above50 = latest.above_sma50;
+                        indicatorsHtml += `
+                            <div class = "d-flex justify-content-between align-items-center mb-2">
+                                <span>50-Day SMA</span>
+                                <span class="${above50 ? 'positive' : 'negative'}">
+                                    ${latest.sma_50.toFixed(2)} ${above50 ? 'Up' : 'Down'}
                                 </span>
                             </div>
                         `;
@@ -906,9 +923,10 @@
                     const toastId = 'toast-' + Date.now();
 
                     const toastHtml = `
-                        <div class="toast" id="${toastId}" role="alert">
+                    <div class="toast" id="${toastId}" role="alert">
                             <div class="toast-header">
-                                <i class="fas fa-${type == 'success' ? 'check-circle text-success' : 'exclamation-triangle text-warning'} me-2"></i>
+                                <i class="fas fa-${type === 'success' ? 'check-circle text-success' : 'exclamation-triangle text-warning'} me-2"></i>
+                                <strong class="me-auto">Dashboard</strong>
                                 <small class="text-muted">now</small>
                                 <button type="button" class "btn-close" data-bs-dismiss="toast"></button>
                             </div>

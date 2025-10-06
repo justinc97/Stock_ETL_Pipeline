@@ -138,6 +138,7 @@ def execute_query(query: str, params: Dict = None) -> pd.DataFrame:
         SQLAlchemyError: If database query fails
     """
     try:
+
         conn = get_db_connection()
 
         if params:
@@ -324,8 +325,6 @@ class StockDataService:
         Returns:
             Dictionary with portfolio summary data
         """
-
-        # Get latest data for all symbols
         query = """
         WITH latest_data AS (
             SELECT
@@ -346,20 +345,32 @@ class StockDataService:
                 WHERE p2.symbol = p.symbol
             )
         ),
-        weekly_performance AS (
+        week_ago_prices AS (
             SELECT
                 symbol,
-                ((close_price - LAG(close_price, 5) OVER (PARTITION BY symbol ORDER BY trade_date)) / 
-                LAG(close_price, 5) OVER (PARTITION BY symbol ORDER BY trade_date)) * 100 as weekly_return
+                close_price as old_price
             FROM daily_stock_prices
-            WHERE trade_date >= CURRENT_DATE - INTERVAL '7 days'
+            WHERE trade_date = (
+                SELECT MAX(trade_date)
+                FROM daily_stock_prices
+                WHERE trade_date <= CURRENT_DATE - INTERVAL '7 days'
+            )
         )
-        SELECT
-            l.*,
-            COALESCE(w.weekly_return, 0) as weekly_return
+        SELECT 
+            l.symbol,
+            l.company_name,
+            l.close_price,
+            l.volume,
+            COALESCE(l.daily_return, 0) as daily_return,
+            COALESCE(
+                ((l.close_price - w.old_price) / NULLIF(w.old_price, 0)) * 100,
+                0
+            ) as weekly_return,
+            COALESCE(l.volatility_30d, 0) as volatility_30d,
+            COALESCE(l.trend_strength, 'unknown') as trend_strength
         FROM latest_data l
-        LEFT JOIN weekly_performance w ON l.symbol = w.symbol
-        ORDER BY l.symbol
+        LEFT JOIN week_ago_prices w ON l.symbol = w.symbol
+        ORDER BY weekly_return DESC
         """
 
         df = execute_query(query)
@@ -380,33 +391,38 @@ class StockDataService:
                 'trend': row['trend_strength'],
                 'volume': int(row['volume'])
             })
-
+        
         # Calculate summary statistics
         total_symbols = len(portfolio_data)
         avg_daily_return = sum(stock['daily_return'] for stock in portfolio_data) / total_symbols if total_symbols > 0 else 0
-        postitive_stocks = sum(1 for stock in portfolio_data if stock['daily_return'] > 0)
+        positive_stocks = sum(1 for stock in portfolio_data if stock['daily_return'] > 0)
+        
+        # Top performers (by weekly return) - filter out zeros and take top 3
+        top_performers = [stock for stock in portfolio_data if stock['weekly_return'] != 0]
+        top_performers = sorted(top_performers, key=lambda x: x['weekly_return'], reverse=True)[:3]
 
-        # Top performers (by weekly return)
-        top_performers = sorted(portfolio_data, key=lambda x: x['weekly_return'], reverse = True)[:3]
-
+        # If all weekly returns are 0, just show top 3 by daily return
+        if not top_performers:
+            top_performers = sorted(portfolio_data, key=lambda x: x['daily_return'], reverse=True)[:3]
+    
         # Recent activity (highest volume)
-        recent_activity = sorted(portfolio_data, key=lambda x: x['volume'], reverse = True)[:5]
+        recent_activity = sorted(portfolio_data, key=lambda x: x['volume'], reverse=True)[:5]
 
         summary = {
             'total_symbols': total_symbols,
             'avg_daily_return': round(avg_daily_return, 4),
-            'positive_stocks': postitive_stocks,
-            'positive_ratio': round((postitive_stocks/total_symbols) * 100, 1) if total_symbols > 0 else 0,
+            'positive_stocks': positive_stocks,
+            'positive_ratio': round((positive_stocks / total_symbols) * 100, 1) if total_symbols > 0 else 0,
             'last_updated': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         }
-
+        
         return {
             'summary': summary,
             'top_performers': top_performers,
             'recent_activity': recent_activity,
             'all_stocks': portfolio_data
         }
-    
+
 # ===============================================================================
 # ROUTE HANDLERS
 # ===============================================================================
@@ -745,7 +761,7 @@ def create_sample_data():
         print("1. Create sample stock symbols")
         print("2. Generate historical price data")
         print("3. Calculate sample indicators")
-        print("✅ Sample data creation completed!")
+        print("Sample data creation completed!")
     except Exception as e:
         print(f"Sample data creation failed: {str(e)}")
 
